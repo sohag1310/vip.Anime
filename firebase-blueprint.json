@@ -1,0 +1,36 @@
+{
+  "entities": {
+    "AdminSettings": {
+      "title": "Admin Settings",
+      "description": "Stores the admin password",
+      "type": "object",
+      "properties": {
+        "password": { "type": "string" }
+      },
+      "required": ["password"]
+    },
+    "AnimeData": {
+      "title": "Anime Data",
+      "description": "Stores Japanese anime series data with drive embed link",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "episode": { "type": "string" },
+        "driveEmbedLink": { "type": "string" },
+        "createdAt": { "type": "number" },
+        "adminPassword": { "type": "string" }
+      },
+      "required": ["title", "episode", "driveEmbedLink", "adminPassword"]
+    }
+  },
+  "firestore": {
+    "admin_settings/{settingId}": {
+      "schema": { "$ref": "#/entities/AdminSettings" },
+      "description": "admin settings configuration"
+    },
+    "anime_data/{animeId}": {
+      "schema": { "$ref": "#/entities/AnimeData" },
+      "description": "List of user-uploaded animes via Google Drive"
+    }
+  }
+}

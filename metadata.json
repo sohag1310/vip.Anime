@@ -1,0 +1,6 @@
+{
+  "name": "VIP Anime Club",
+  "description": "An exclusive premium 3D anime experience with VIP benefits.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

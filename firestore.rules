@@ -1,0 +1,65 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+
+    // Validation for AdminSettings
+    function isValidAdminSettings(data) {
+      return data.keys().hasAll(['password']) 
+             && data.password is string 
+             && data.password.size() > 0 
+             && data.password.size() <= 128;
+    }
+
+    // Validation for AnimeData
+    function isValidAnimeData(data) {
+      return data.keys().hasAll(['title', 'episode', 'driveEmbedLink', 'adminPassword'])
+             && data.title is string && data.title.size() <= 500
+             && data.episode is string && data.episode.size() <= 100
+             && data.driveEmbedLink is string && data.driveEmbedLink.size() <= 2000
+             && data.adminPassword is string && data.adminPassword.size() <= 128;
+    }
+
+    function getAdminPassword() {
+      return exists(/databases/$(database)/documents/admin_settings/auth) 
+             ? get(/databases/$(database)/documents/admin_settings/auth).data.password 
+             : '9221';
+    }
+
+    match /admin_settings/{settingId} {
+      allow read: if true; 
+      allow create: if isValidId(settingId) 
+                    && settingId == 'auth' 
+                    && isValidAdminSettings(incoming()) 
+                    && !exists(/databases/$(database)/documents/admin_settings/auth);
+      
+      allow update: if isValidId(settingId) 
+                    && settingId == 'auth' 
+                    && isValidAdminSettings(incoming())
+                    && incoming().keys().hasAll(['oldPassword'])
+                    && incoming().oldPassword == existing().password;
+    }
+
+    match /anime_data/{animeId} {
+      allow read: if true;
+      allow create, update: if isValidId(animeId) 
+                            && isValidAnimeData(incoming())
+                            && incoming().adminPassword == getAdminPassword();
+      allow delete: if incoming().adminPassword == getAdminPassword(); 
+    }
+  }
+}
